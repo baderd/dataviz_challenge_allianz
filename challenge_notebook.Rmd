@@ -34,10 +34,11 @@ rownames(books_mat)[13] <- colnames(books_mat)[13] <- "Religion"
 * Check if upper and lower triangle identical
 
 ```{r}
-identical(
-    sort(books_mat[upper.tri(books_mat)]), 
-    sort(books_mat[lower.tri(books_mat)])
+is_upper_lower <- identical(
+    books_mat[upper.tri(books_mat)], 
+    t(books_mat)[upper.tri(books_mat)]
 )
+is_upper_lower
 ```
 
 * Transform to long and tidy `data.table`
@@ -45,10 +46,54 @@ identical(
 ```{r}
 books_dt <- as.data.table(books_mat, keep.rownames = TRUE)
 setnames(books_dt, c('genreA',colnames(books_mat)))
-books_dt <- gather(books_dt, genreB, sales, Satire:Journals)
-books_dt
+books_dt <- as.data.table(gather(books_dt, genreB, customers, Satire:Journals))
+head(books_dt)
 ```
 
 * Check if columns sum up to value of diagonal
 
+```{r}
+is_diagonal_sum_of_column <- {books_dt[genreA =='Satire' 
+    & genreB != 'Satire', sum(customers)] 
+    - books_dt[genreA =='Satire' & genreB == 'Satire', customers]} == 0
+is_diagonal_sum_of_column
+```
+
+
+## First ideas
+
+* most selling category
+
+```{r}
+plot_ly(data=books_dt[genreA==genreB][order(customers)], 
+    x=~genreA, y=~customers, type="bar"
+)%>% layout(
+    margin=list(b=100), 
+    xaxis=list(categoryorder="trace"),
+    title="Most bought genre"
+)
+```
+
+* best pairs
+
+```{r}
+all_genres <- unique(books_dt$genreA)
+all_pairs <- combn(all_genres, 2, simplify = F)
+pair_customers <- 
+pair_dt <- data.table(
+    genre_pairs = sapply(all_pairs, function(p){
+        paste(sort(p), collapse = "&")}
+    ),
+    pair_customers = sapply(all_pairs, function(p){
+        books_dt[genreA==p[1] & genreB==p[2], customers]
+    })
+)
+plot_ly(data=pair_dt[order(pair_customers, decreasing=T)][1:10], type='bar', 
+    x=~genre_pairs, y=~pair_customers
+)%>% layout(
+    margin=list(b=100), 
+    xaxis=list(categoryorder="trace"),
+    title="Top 10 genre pairs"
+)
+```
 
