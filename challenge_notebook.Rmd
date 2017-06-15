@@ -2,21 +2,25 @@
 title: "Allianz DataViz Challenge"
 author: "Daniel Bader"
 output:
-  html_notebook: default
-  html_document: default
+  html_notebook:
+    toc: yes
+    toc_float: yes
+  html_document:
+    toc: yes
+    toc_float: yes
 ---
 
-```{r, message=FALSE}
+```{r, message=FALSE, echo=T}
 library(plotly)
 library(data.table)
 library(tidyr)
 library(knitr)
 library(heatmaply)
-opts_chunk$set(echo=FALSE, cache=F)
 ```
 
 
-```{r}
+```{r, echo=FALSE}
+opts_chunk$set(echo=FALSE, cache=F)
 total_customers <- 195387
 file_bookstore <- file.path("~/Downloads/toydata/book_genres_data.csv")
 source("build_book_store.R")
@@ -26,8 +30,6 @@ source("build_book_store.R")
 # Preprocessing
 
 * Load data file
-* assign first column as row names
-* clean row names
 * rename genres for better readability
     * "Religion, Spirituality & New Age" to "Religion"
     * "Science.fiction" to "SciFi"
@@ -76,17 +78,26 @@ sum(books_dt[genreA==genreB, customers])/total_customers
 ```
 
 
-## First ideas
+# First ideas
 
-* Show me everything!
+## Show me everything!
 
 ```{r, fig.width=8, fig.height=8}
 hm <- heatmapr(books_mat)
-heatmaply(hm, plot_method = 'plotly', colors =  c('lightblue', 'darkblue'))
+heatmaply(hm, 
+    plot_method = 'plotly', 
+    colors =  c('grey95', 'dodgerblue')
+)
 ```
 
+* Romance, SciFi, Action, History are most bought 
+* bought-together clusters:
+    * Romance, SciFi, Action, History
+    * Dictionaries and Comics
+    * Math and Poetry
+* Mystery is an outlier
 
-* most selling category
+## Most bought genre
 
 ```{r}
 plot_ly(data=books_dt[genreA==genreB][order(customers)], 
@@ -98,7 +109,7 @@ plot_ly(data=books_dt[genreA==genreB][order(customers)],
 )
 ```
 
-* best pairs
+## Best pairs
 
 ```{r}
 all_genres <- unique(books_dt$genreA)
@@ -121,13 +132,24 @@ plot_ly(data=pair_dt[order(pair_customers, decreasing=T)][1:10], type='bar',
 )
 ```
 
-* Look for customers that buy only one genre
-    * Compare `column sum` and  `2*diagonal value`
-    * generate table with `{genreA=<genre>, genreB=NA, customers={2*diagonal-colSum}}`
-    
-* If a customer buys more than 2 genres, he is recorded in more than 1 off-diagonal entry
+* mostly combinations of most bought genres
+
+
+# Special genres
+
+Hypothesis
+
+* If a customer buys more than 2 genres, 
+he is recorded in more than 1 off-diagonal entry
 --> (2*diagonal - colSum) < 0
-* If a genre is bought more often alone than in triplets (or higher), (2*diagonal - colSum) > 0
+* If a genre is bought more often alone than in triplets (or higher): (2*diagonal - colSum) > 0
+
+
+Look for customers that buy only one genre
+
+* Compare `column sum` and  `2*diagonal value`
+* generate table with 
+`{genreA=<genre>, genreB=NA,  customers={2*diagonal-colSum}}`
 
 
 ```{r}
@@ -138,16 +160,20 @@ tmp <- sapply(all_genres, function(g){
     cs <- sum(books_dt[genreA==g, customers])
     selective_customers <- I(2*d - cs)#;selective_customers
     selective_dt <<- rbind(selective_dt, 
-        data.table(genreA=g, genreB=NA, customers=selective_customers)
+        data.table(genreA=g, genreB=NA, diag_diff=selective_customers)
     )
 })
 
-plot_ly(data=selective_dt[order(customers)], 
-    x=~genreA, y=~customers, type="bar"
+p_sel <- plot_ly(data=selective_dt[order(diag_diff)], 
+    y=~genreA, x=~diag_diff, type="bar", color = ~diag_diff>0
 )%>% layout(
-    margin=list(b=100), 
-    xaxis=list(categoryorder="trace"),
-    title="2*Diagonal - colSum"
+    margin=list(l=100), 
+    yaxis=list(categoryorder="trace", title=''),
+    xaxis=list(title='2*diagonal - columnSum'),
+    title="Which genres are bought alone?"
 )
-
 ```
+```{r,warning=FALSE, fig.width=8}
+show(p_sel)
+```
+
