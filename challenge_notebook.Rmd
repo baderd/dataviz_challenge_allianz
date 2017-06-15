@@ -10,25 +10,40 @@ output:
 library(plotly)
 library(data.table)
 library(tidyr)
+library(knitr)
+library(heatmaply)
+opts_chunk$set(echo=FALSE, cache=F)
 ```
 
 
-```{r, echo=TRUE}
-plot_ly(x=1:10, y=1:10, type='scatter', mode='markers')
+```{r}
+total_customers <- 195387
+file_bookstore <- file.path("~/Downloads/toydata/book_genres_data.csv")
+source("build_book_store.R")
 ```
+
 
 # Preprocessing
 
 * Load data file
 * assign first column as row names
 * clean row names
-* rename "Religion, Spirituality & New Age" to "Religion" in row and column
-
+* rename genres for better readability
+    * "Religion, Spirituality & New Age" to "Religion"
+    * "Science.fiction" to "SciFi"
+    * "Action.and.Adventure" to "Action"
+    
+All genres:
 ```{r}
-file_bookstore <- file.path("~/Downloads/toydata/book_genres_data.csv")
 books_mat <- read.csv(file_bookstore, row.names = 1)
 rownames(books_mat) <- make.names(rownames(books_mat))
-rownames(books_mat)[13] <- colnames(books_mat)[13] <- "Religion"
+rownames(books_mat) <- sub("Science.fiction", "SciFi", rownames(books_mat))
+rownames(books_mat) <- sub("Action.and.Adventure", "Action", rownames(books_mat))
+rownames(books_mat) <- sub("Religion..Spirituality...New.Age", 
+    "Religion", rownames(books_mat)
+)
+colnames(books_mat) <- rownames(books_mat)
+rownames(books_mat)
 ```
 
 * Check if upper and lower triangle identical
@@ -47,18 +62,29 @@ is_upper_lower
 books_dt <- as.data.table(books_mat, keep.rownames = TRUE)
 setnames(books_dt, c('genreA',colnames(books_mat)))
 books_dt <- as.data.table(gather(books_dt, genreB, customers, Satire:Journals))
+```
+
+```{r, echo=T}
 head(books_dt)
 ```
 
-* Check if diagnoal sums of to total amount of customers
+
+* Average number of genres per customer
 
 ```{r}
-total_customers <- 195387
-sum(books_dt[genreA==genreB, customers])
+sum(books_dt[genreA==genreB, customers])/total_customers
 ```
 
 
 ## First ideas
+
+* Show me everything!
+
+```{r, fig.width=8, fig.height=8}
+hm <- heatmapr(books_mat)
+heatmaply(hm, plot_method = 'plotly', colors =  c('lightblue', 'darkblue'))
+```
+
 
 * most selling category
 
