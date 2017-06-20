@@ -140,40 +140,37 @@ plot_ly(data=pair_dt[order(pair_customers, decreasing=T)][1:10], type='bar',
 Hypothesis
 
 * If a customer buys more than 2 genres, 
-he is recorded in more than 1 off-diagonal entry
---> (2*diagonal - colSum) < 0
-* If a genre is bought more often alone than in triplets (or higher): (2*diagonal - colSum) > 0
+he is recorded in more than 1 off-diagonal entry:
+    * (2*diagonal - colSum) < 0
+* If a genre is bought more often alone than in triplets (or higher): 
+    * (2*diagonal - colSum) > 0
 
 
 Look for customers that buy only one genre
 
 * Compare `column sum` and  `2*diagonal value`
-* generate table with 
-`{genreA=<genre>, genreB=NA,  customers={2*diagonal-colSum}}`
+* generate table with `{genre, {2*diagonal-colSum}}`
 
 
-```{r}
+```{r, warning=FALSE, fig.width=8}
 all_genres <- unique(books_dt$genreA)
 selective_dt <- data.table()
-tmp <- sapply(all_genres, function(g){
+for(g in all_genres){
     d <- books_dt[genreA==g & genreB==g, customers]
     cs <- sum(books_dt[genreA==g, customers])
-    selective_customers <- I(2*d - cs)#;selective_customers
-    selective_dt <<- rbind(selective_dt, 
-        data.table(genreA=g, genreB=NA, diag_diff=selective_customers)
-    )
-})
+    dd <- I(2*d - cs)
+    selective_dt <- rbind(selective_dt, data.table(genre=g, diag_diff=dd))
+}
 
 p_sel <- plot_ly(data=selective_dt[order(diag_diff)], 
-    y=~genreA, x=~diag_diff, type="bar", color = ~diag_diff>0
+    y=~genre, x=~diag_diff, type="bar", color = ~diag_diff>0
 )%>% layout(
     margin=list(l=100), 
     yaxis=list(categoryorder="trace", title=''),
     xaxis=list(title='2*diagonal - columnSum'),
     title="Which genres are bought alone?"
 )
-```
-```{r,warning=FALSE, fig.width=8}
+
 show(p_sel)
 ```
 
