@@ -1,11 +1,20 @@
-# dataviz_challenge_allianz
-The Allianz data visualization challenge from Munich meetup
+# The Allianz data visualization challenge
 
-Description from here:
-https://www.meetup.com/Data-Visualization-Meetup-Munich/messages/boards/thread/50854350
+## My solution
 
-The Allianz data visualization challenge
-======================================
+My data visualization analysis is available as
+
+* [R markdown notebook](challenge_notebook.nb.html)
+* [R markdown HTML](challenge_notebook.html)
+
+
+## The challenge
+
+Challenge from Munich meetup "Data visualization". 
+Original description and data can be found
+[here](https://www.meetup.com/Data-Visualization-Meetup-Munich/messages/boards/thread/50854350).
+
+
 Compete for a cool prize sponsored by Allianz which will be 
 awarded at the next meetup.
 

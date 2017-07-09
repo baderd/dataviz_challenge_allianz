@@ -174,3 +174,52 @@ p_sel <- plot_ly(data=selective_dt[order(diag_diff)],
 show(p_sel)
 ```
 
+
+# Normalize columns by value of diagonal
+
+```{r}
+books_dt[,
+    rel_customers:= (customers/books_dt[genreA==genreB, customers]), 
+    by=genreB
+    ]
+head(books_dt[order(genreA)])
+```
+```{r, fig.width=8, fig.height=8}
+plot_ly(data=books_dt) %>%
+    add_heatmap(
+        z=~rel_customers, x=~genreA, y=~genreB, colors= c('grey95', 'dodgerblue')
+    ) %>%
+    layout(
+        margin=list(b=110, l=110)
+    )
+```
+
+With clustering of rows and columns
+```{r, fig.width=8, fig.height=8}
+books_relmat <- dcast(books_dt, genreA ~ genreB, value.var = "rel_customers")
+books_relmat <- as.matrix(books_relmat[,genreA:=NULL])
+rownames(books_relmat) <- colnames(books_relmat)
+
+heatmaply(heatmapr(books_relmat), 
+    plot_method = 'plotly', 
+    colors =  c('grey95', 'dodgerblue')
+)
+```
+
+Relative best pairs
+```{r}
+plot_ly(
+        data = books_dt[genreA != genreB][order(rel_customers, decreasing = T)][1:10]
+    ) %>% 
+    add_bars(
+        x=~paste0(genreA, "&", genreB), y=~rel_customers
+        ) %>% 
+    layout(
+        margin=list(b=100, r=80), 
+        xaxis=list(categoryorder="trace", title=''),
+        yaxis=list(exponentformat='none'),
+        title="Top 10 relative genre pairs"
+)
+```
+
+
