@@ -162,8 +162,10 @@ for(g in all_genres){
     selective_dt <- rbind(selective_dt, data.table(genre=g, diag_diff=dd))
 }
 
-p_sel <- plot_ly(data=selective_dt[order(diag_diff)], 
-    y=~genre, x=~diag_diff, type="bar", color = ~diag_diff>0
+p_sel <- plot_ly(
+    data=selective_dt[order(diag_diff)], 
+    y=~genre, x=~diag_diff, type="bar", 
+    color = ~diag_diff>0, colors=c("gray", "darkgreen")
 )%>% layout(
     margin=list(l=100), 
     yaxis=list(categoryorder="trace", title=''),
@@ -173,9 +175,12 @@ p_sel <- plot_ly(data=selective_dt[order(diag_diff)],
 
 show(p_sel)
 ```
+* Mystery and Horror are mostly bought alone
+* Satire and Travel rather bought in pairs
 
 
-# Normalize columns by value of diagonal
+
+# Normalize columns by diagonal
 
 ```{r}
 books_dt[,
@@ -184,6 +189,11 @@ books_dt[,
     ]
 head(books_dt[order(genreA)])
 ```
+
+--> genreB relative to genreA-diagonal value 
+
+Look at all data unsorted: No pattern.
+
 ```{r, fig.width=8, fig.height=8}
 plot_ly(data=books_dt) %>%
     add_heatmap(
@@ -194,19 +204,54 @@ plot_ly(data=books_dt) %>%
     )
 ```
 
-With clustering of rows and columns
+With clustering of rows and columns (Note: they are different now):
+
 ```{r, fig.width=8, fig.height=8}
 books_relmat <- dcast(books_dt, genreA ~ genreB, value.var = "rel_customers")
 books_relmat <- as.matrix(books_relmat[,genreA:=NULL])
 rownames(books_relmat) <- colnames(books_relmat)
 
-heatmaply(heatmapr(books_relmat), 
+hmrel <- heatmapr(t(books_relmat), k_col=3, k_row=3)
+heatmaply(
+    x=hmrel, 
     plot_method = 'plotly', 
-    colors =  c('grey95', 'dodgerblue')
+    colors =  c('grey95', 'dodgerblue'),
+    xlab='genreA', ylab='genreB'
+) %>% layout(
+    title='Customers of genreB relative to genreA',
+    margin=list(t=50)
 )
 ```
 
-Relative best pairs
+* 2 hubs on genreA axis (top dendro)
+    * Art, Journals, Action, SciFi, History
+    * Encyclopedias, Comics, Disctionaries, Poetry, Math, Anthology
+    * e.g. genres that were bought with Art were also bought together with Journals
+* 2 hubs on genreB axis (right dendro)
+    * Romance, History, Action, SciFi --> Romance instead of Art and Journals
+    * same
+* bought with everything else? Romance
+
+
+## Most favorite partner genre
+
+```{r}
+plot_ly(
+    data=books_dt[,median(rel_customers), by=genreB][order(V1, decreasing = T)]
+    )%>%
+    add_bars(x=~genreB, y=~V1)%>%
+    layout(
+        yaxis=list(title='Median relative customers'),
+        xaxis=list(categoryorder='trace'),
+        margin=list(b=100)
+    )
+```
+
+--> about 20% customers additionally bought SciFi and Romance
+
+
+## Relative best pairs
+
 ```{r}
 plot_ly(
         data = books_dt[genreA != genreB][order(rel_customers, decreasing = T)][1:10]
@@ -222,4 +267,4 @@ plot_ly(
 )
 ```
 
-
+--> **Math is poetry and History is Science fiction!**
