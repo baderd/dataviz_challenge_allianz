@@ -2,7 +2,8 @@
 
 ## My solution
 
-My data visualization analysis is available as
+My data visualization analysis is available on
+[my github.io](https://baderd.github.io/dataviz_challenge_allianz/).
 
 * [R markdown notebook](challenge_notebook.nb.html)
 * [R markdown HTML](challenge_notebook.html)
