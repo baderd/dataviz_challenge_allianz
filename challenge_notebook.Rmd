@@ -2,10 +2,10 @@
 title: "Allianz DataViz Challenge"
 author: "Daniel Bader"
 output:
-  html_notebook:
+  html_document:
     toc: yes
     toc_float: yes
-  html_document:
+  html_notebook:
     toc: yes
     toc_float: yes
 ---
