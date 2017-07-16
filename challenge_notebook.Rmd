@@ -2,10 +2,10 @@
 title: "Allianz DataViz Challenge"
 author: "Daniel Bader"
 output:
-  html_document:
+  html_notebook:
     toc: yes
     toc_float: yes
-  html_notebook:
+  html_document:
     toc: yes
     toc_float: yes
 ---
@@ -20,7 +20,7 @@ library(heatmaply)
 
 
 ```{r, echo=FALSE}
-opts_chunk$set(echo=FALSE, cache=F)
+opts_chunk$set(echo=T, cache=FALSE)
 total_customers <- 195387
 file_bookstore <- file.path("~/Downloads/toydata/book_genres_data.csv")
 source("build_book_store.R")
@@ -66,7 +66,7 @@ setnames(books_dt, c('genreA',colnames(books_mat)))
 books_dt <- as.data.table(gather(books_dt, genreB, customers, Satire:Journals))
 ```
 
-```{r, echo=T}
+```{r, echo=F}
 head(books_dt)
 ```
 
@@ -93,7 +93,6 @@ heatmaply(hm,
 * Romance, SciFi, Action, History are most bought 
 * bought-together clusters:
     * Romance, SciFi, Action, History
-    * Dictionaries and Comics
     * Math and Poetry
 * Mystery is an outlier
 
@@ -152,7 +151,7 @@ Look for customers that buy only one genre
 * generate table with `{genre, {2*diagonal-colSum}}`
 
 
-```{r, warning=FALSE, fig.width=8}
+```{r, warning=FALSE, fig.height=5}
 all_genres <- unique(books_dt$genreA)
 selective_dt <- data.table()
 for(g in all_genres){
@@ -195,9 +194,11 @@ head(books_dt[order(genreA)])
 Look at all data unsorted: No pattern.
 
 ```{r, fig.width=8, fig.height=8}
-plot_ly(data=books_dt) %>%
+plot_ly(
+    data=books_dt, x=~genreA, y=~genreB
+    ) %>%
     add_heatmap(
-        z=~rel_customers, x=~genreA, y=~genreB, colors= c('grey95', 'dodgerblue')
+        z=~rel_customers, colors= c('grey95', 'dodgerblue')
     ) %>%
     layout(
         margin=list(b=110, l=110)
